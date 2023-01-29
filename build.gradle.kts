@@ -26,6 +26,7 @@ intellij {
 dependencies {
     implementation("org.freemarker:freemarker:2.3.31")
     implementation("org.yaml:snakeyaml:1.28")
+    implementation("org.apache.velocity:velocity-engine-core:2.2")
 }
 
 tasks {

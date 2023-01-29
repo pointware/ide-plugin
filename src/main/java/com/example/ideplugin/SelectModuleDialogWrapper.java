@@ -1,28 +1,39 @@
 package com.example.ideplugin;
 
-import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBList;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Arrays;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class SelectModuleDialogWrapper extends DialogWrapper
-        implements OkCallbackDialog<Module> {
+        implements OkCallbackDialog<String> {
     private final JPanel myMainPanel = new JPanel(new BorderLayout());
-    private Consumer<Module> consumer;
-    private final JList<Module> moduleList;
+    private Consumer<String> consumer;
+    private final JList<String> moduleList;
 
-    protected SelectModuleDialogWrapper(Project project, Module[] modules) {
+    protected SelectModuleDialogWrapper(Project project) {
         super(project, true);
         setTitle("select module");
-        moduleList = new JBList<>(modules);
+        VirtualFile[] contentSourceRoots = ProjectRootManager.getInstance(project).getContentSourceRoots();
+        String basePath = project.getBasePath();
+        Set<String> collect = Arrays.stream(contentSourceRoots)
+                .map(o -> o.getPath().substring(basePath.length()+1))
+                .filter(o -> o.endsWith("/main/java"))
+                .collect(Collectors.toSet());
+
+        moduleList = new JBList<>(collect);
         moduleList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        moduleList.setCellRenderer((list1, value, index, isSelected, cellHasFocus) -> new JBLabel(value.getName()));
+        moduleList.setCellRenderer((list1, value, index, isSelected, cellHasFocus) -> new JBLabel(value));
         myMainPanel.add(moduleList);
         init();
     }
@@ -44,7 +55,7 @@ public class SelectModuleDialogWrapper extends DialogWrapper
         }
     }
 
-    public void addOkCallback(Consumer<Module> consumer) {
+    public void addOkCallback(Consumer<String> consumer) {
         this.consumer = consumer;
     }
 }
